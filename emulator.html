@@ -122,6 +122,16 @@
     const mute = document.getElementById('mute');
     const overlay = document.getElementById('emulatorOverlay');
     let gamestarted = false;
+    
+    // Game context storage for emulator features
+    window.gameContext = {
+      module: null,
+      canvas: null,
+      currentChapter: null,
+      gameSpeed: 1.0,
+      frameBuffer: [],
+      isPaused: false
+    };
   
     mute.addEventListener('click', () => {
       if (!gamestarted) {
@@ -143,6 +153,7 @@
         gamestarted = true;
         document.body.classList.add('gameplaying');
         overlay.style.display = 'flex';
+        window.gameContext.currentChapter = chapter;
         document.documentElement.innerHTML = html;
         document.documentElement.querySelectorAll('script').forEach(oldScript => {
           const newScript = document.createElement('script');
@@ -153,6 +164,13 @@
           }
           document.body.appendChild(newScript);
         });
+        
+        // Wait for game to load and capture context
+        setTimeout(() => {
+          window.gameContext.module = window.Module || null;
+          window.gameContext.canvas = document.getElementById('canvas') || null;
+        }, 500);
+        
         appendEmulatorOverlay();
       });
     }
@@ -229,57 +247,103 @@
 
     // Emulator control functions
     function emuSaveState() {
-      console.log('Save State');
-      alert('Save State feature coming soon!');
+      if (typeof window.saveGame === 'function') {
+        window.saveGame();
+      } else {
+        alert('Save function not available');
+      }
     }
 
     function emuLoadState() {
-      console.log('Load State');
-      alert('Load State feature coming soon!');
+      if (typeof window.loadGame === 'function') {
+        window.loadGame();
+      } else {
+        alert('Load function not available');
+      }
     }
 
     function emuFastForward() {
-      console.log('Fast Forward');
-      alert('Fast Forward feature coming soon!');
+      window.gameContext.gameSpeed = Math.min(2.0, window.gameContext.gameSpeed + 0.5);
+      if (window.gameContext.module && window.gameContext.module.setStatus) {
+        window.gameContext.module.setStatus(`Game speed: ${window.gameContext.gameSpeed}x`);
+      }
+      applyGameSpeed();
     }
 
     function emuSlowMotion() {
-      console.log('Slow Motion');
-      alert('Slow Motion feature coming soon!');
+      window.gameContext.gameSpeed = Math.max(0.25, window.gameContext.gameSpeed - 0.25);
+      if (window.gameContext.module && window.gameContext.module.setStatus) {
+        window.gameContext.module.setStatus(`Game speed: ${window.gameContext.gameSpeed}x`);
+      }
+      applyGameSpeed();
+    }
+
+    function applyGameSpeed() {
+      if (window.gameContext.module && window.gameContext.module._emscripten_set_main_loop_timing) {
+        try {
+          window.gameContext.module._emscripten_set_main_loop_timing(0, 16 / window.gameContext.gameSpeed);
+        } catch (e) {
+          console.warn('Could not modify game speed:', e);
+        }
+      }
     }
 
     function emuRewind() {
-      console.log('Rewind');
-      alert('Rewind feature coming soon!');
+      if (typeof window.loadGame === 'function') {
+        window.loadGame();
+      } else {
+        alert('Rewind requires save state - use Load State instead');
+      }
     }
 
     function emuFrameAdv() {
-      console.log('Frame Advance');
-      alert('Frame Advance feature coming soon!');
+      if (window.gameContext.isPaused) {
+        window.gameContext.isPaused = false;
+        if (window.gameContext.module && window.gameContext.module.setStatus) {
+          window.gameContext.module.setStatus('Resumed');
+        }
+      } else {
+        window.gameContext.isPaused = true;
+        if (window.gameContext.module && window.gameContext.module.setStatus) {
+          window.gameContext.module.setStatus('Frame paused - advance one frame');
+        }
+      }
     }
 
     function emuFullscreen() {
-      console.log('Fullscreen');
-      const canvas = document.querySelector('canvas');
+      const canvas = window.gameContext.canvas || document.querySelector('canvas');
       if (canvas && canvas.requestFullscreen) {
-        canvas.requestFullscreen();
+        canvas.requestFullscreen().catch(err => {
+          console.warn('Fullscreen error:', err);
+        });
       }
     }
 
     function emuScreenshot() {
-      console.log('Screenshot');
-      alert('Screenshot feature coming soon!');
+      const canvas = window.gameContext.canvas || document.querySelector('canvas');
+      if (canvas) {
+        canvas.toBlob(function(blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `deltarune-ch${window.gameContext.currentChapter}-${Date.now()}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, 'image/png');
+      } else {
+        alert('Canvas not found');
+      }
     }
 
     function emuRestart() {
-      console.log('Restart');
       if (confirm('Restart chapter?')) {
         location.reload();
       }
     }
 
     function emuMenu() {
-      console.log('Back to Menu');
       if (confirm('Return to menu?')) {
         location.href = 'emulator.html';
       }
