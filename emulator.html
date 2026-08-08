@@ -1,43 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <base href="https://cdn.jsdelivr.net/gh/technonyte00/deltarune@main/">
   <meta charset="UTF-8">
-  <title>Deltarune Chapter 5 Emulator</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    .feature-summary {
-      margin: 24px 0;
-      font-size: 20px;
-      line-height: 1.6;
-    }
-    .feature-summary ul {
-      margin: 16px 0 0 24px;
-      padding: 0;
-    }
-    .feature-summary li {
-      margin-bottom: 12px;
-    }
-    .action-row {
+    #emulatorOverlay {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 0, 0, 0.9);
+      border-top: 2px solid #fefe00;
+      padding: 12px 16px;
       display: flex;
-      gap: 16px;
+      gap: 12px;
+      align-items: center;
+      font-size: 14px;
+      z-index: 9998;
       flex-wrap: wrap;
       justify-content: center;
-      margin-top: 28px;
     }
-    .action-row a {
-      min-width: 200px;
-      text-align: center;
-      padding: 14px 18px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.6);
-      color: white;
-      text-decoration: none;
-      background: rgba(0,0,0,0.55);
-      transition: transform 0.15s ease, background 0.15s ease;
+
+    .emu-control {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid #fefe00;
+      color: #fefe00;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.2s ease;
     }
-    .action-row a:hover {
-      background: rgba(255,255,255,0.1);
-      transform: translateY(-2px);
+
+    .emu-control:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .emu-control:active {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .emu-separator {
+      width: 1px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    body.gameplaying #emulatorOverlay {
+      display: none;
+    }
+
+    body.gameplaying .menu {
+      display: none;
     }
   </style>
 </head>
@@ -45,35 +60,230 @@
   <div class="logo-container">
     <img src="logo.png" alt="Logo" class="logo">
   </div>
-
+  
   <div class="menu">
-    <div class="row">
+    <a href="javascript:loadChapterWithEmu(1)" class="row">
+      <span class="chapter">Chapter 1</span>
+      <span class="title">The Beginning</span>
+      <img src="icons/1.png">
+    </a>
+    <a href="javascript:loadChapterWithEmu(2)" class="row">
+      <span class="chapter">Chapter 2</span>
+      <span class="title">A Cyber's World</span>
+      <img src="icons/2.png">
+    </a>
+    <a href="javascript:loadChapterWithEmu(3)" class="row">
+      <span class="chapter">Chapter 3</span>
+      <span class="title">Late Night</span>
+      <img src="icons/3.png">
+    </a>
+    <a href="javascript:loadChapterWithEmu(4)" class="row">
+      <span class="chapter">Chapter 4</span>
+      <span class="title">Prophecy</span>
+      <img src="icons/4.png">
+    </a>
+    <a href="javascript:loadChapterWithEmu(5)" class="row">
       <span class="chapter">Chapter 5</span>
-      <span class="title">Emulator Feature Guide</span>
-      <img src="icons/5.png" alt="Chapter 5">
-    </div>
-
-    <div class="feature-summary">
-      <p>Use this page as the Chapter 5 launch hub. It lists the common emulator features that make playing a port more comfortable and powerful.</p>
-      <ul>
-        <li><strong>Save State / Load State</strong> — instant save and resume from any moment.</li>
-        <li><strong>Fast Forward</strong> — speed up cutscenes and long gameplay sections.</li>
-        <li><strong>Slow Motion</strong> — slow the game for precise timing or easier navigation.</li>
-        <li><strong>Pause / Resume</strong> — suspend gameplay while keeping the session alive.</li>
-        <li><strong>Rewind</strong> — step backward to recover from mistakes.</li>
-        <li><strong>Frame Advance</strong> — move one frame at a time for precise control.</li>
-        <li><strong>Fullscreen</strong> — expand the canvas to fill the screen.</li>
-        <li><strong>Audio Controls</strong> — mute, unmute, or adjust sound while playing.</li>
-        <li><strong>Restart / Reset</strong> — restart the current chapter or scene quickly.</li>
-        <li><strong>Screenshot / Capture</strong> — save important moments or progress screens.</li>
-      </ul>
-    </div>
-
-    <div class="action-row">
-      <a href="chapter5/index.html">Launch Chapter 5</a>
-      <a href="coldgame.html">Open Unified Launcher</a>
-      <a href="index.html">Back to Main Menu</a>
-    </div>
+      <span class="title">The Void</span>
+      <img src="icons/5.png">
+    </a>
+    <a href="javascript:window.open('https://truffled.lol', '_blank')" class="row">
+      <span class="chapter"></span>
+      <span class="title">port by bog :o</span>
+      <span class="badge"></span>
+    </a>
   </div>
+
+  <div id="emulatorOverlay" style="display: none;">
+    <div class="emu-control" onclick="emuSaveState()">💾 Save State</div>
+    <div class="emu-control" onclick="emuLoadState()">📂 Load State</div>
+    <div class="emu-separator"></div>
+    <div class="emu-control" onclick="emuFastForward()">⏩ Fast Forward</div>
+    <div class="emu-control" onclick="emuSlowMotion()">🐢 Slow Motion</div>
+    <div class="emu-separator"></div>
+    <div class="emu-control" onclick="emuRewind()">⏮️ Rewind</div>
+    <div class="emu-control" onclick="emuFrameAdv()">⏸️ Frame +1</div>
+    <div class="emu-separator"></div>
+    <div class="emu-control" onclick="emuFullscreen()">⛶ Fullscreen</div>
+    <div class="emu-control" onclick="emuScreenshot()">📸 Screenshot</div>
+    <div class="emu-separator"></div>
+    <div class="emu-control" onclick="emuRestart()">🔄 Restart</div>
+    <div class="emu-control" onclick="emuMenu()">≡ Menu</div>
+  </div>
+
+  <audio id="drone" controls loop autoplay hidden>
+    <source src="audios/AUDIO_DRONE.ogg" type="audio/ogg">
+    your slow ass browser doesnt support AUDIO?
+  </audio>
+  <button id="mute">🔊</button>
+
+  <script>
+    const audio = document.getElementById('drone');
+    const mute = document.getElementById('mute');
+    const overlay = document.getElementById('emulatorOverlay');
+    let gamestarted = false;
+  
+    mute.addEventListener('click', () => {
+      if (!gamestarted) {
+        audio.muted = !audio.muted;
+        updateButton(); 
+      }
+    });
+  
+    function updateButton() {
+      if (!gamestarted) {
+        mute.textContent = audio.muted ? '🔊' : '🔇';
+      }
+    }
+  
+    updateButton();
+
+    function loadChapterWithEmu(chapter) {
+      fetch(`chapter${chapter}/index.html`).then(res => res.text()).then(html => {
+        gamestarted = true;
+        document.body.classList.add('gameplaying');
+        overlay.style.display = 'flex';
+        document.documentElement.innerHTML = html;
+        document.documentElement.querySelectorAll('script').forEach(oldScript => {
+          const newScript = document.createElement('script');
+          if (oldScript.src) {
+            newScript.src = oldScript.src;
+          } else {
+            newScript.textContent = oldScript.textContent;
+          }
+          document.body.appendChild(newScript);
+        });
+        appendEmulatorOverlay();
+      });
+    }
+
+    function appendEmulatorOverlay() {
+      const overlayClone = document.createElement('div');
+      overlayClone.id = 'emulatorOverlay';
+      overlayClone.style.cssText = 'position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0, 0, 0, 0.9); border-top: 2px solid #fefe00; padding: 12px 16px; display: flex; gap: 12px; align-items: center; font-size: 14px; z-index: 9998; flex-wrap: wrap; justify-content: center;';
+      overlayClone.innerHTML = overlay.innerHTML;
+      document.body.appendChild(overlayClone);
+    }
+
+    const menumoveaudio = new Audio('audios/snd_menumove.mp3');
+    const menuselectaudio = new Audio('audios/snd_select.mp3');
+    document.querySelectorAll('.row').forEach(row => {
+      row.addEventListener('mouseenter', () => {
+        if (!gamestarted) {
+          menumoveaudio.play();
+          if (selectedChapter) {
+            document.querySelectorAll('.row')[selectedChapter].classList.remove("selected");
+          }
+        }
+      });
+      row.addEventListener('click', () => {
+        if (!gamestarted) {
+          menuselectaudio.play();
+        }
+      });
+    });
+
+    let selectedChapter = null;
+    document.addEventListener('keydown', function(event) {
+      if (!gamestarted) {
+      if (event.key === 'ArrowUp') {
+        if (selectedChapter === null) {
+          selectedChapter = 0;
+          document.querySelectorAll('.row')[0].classList.add("selected");
+          menumoveaudio.play();
+        } else {
+          document.querySelectorAll('.row')[selectedChapter].classList.remove("selected");
+          selectedChapter--;
+          if (selectedChapter < 0) {
+            selectedChapter = document.querySelectorAll('.row').length - 1;
+          }
+          document.querySelectorAll('.row')[selectedChapter].classList.add("selected");
+          menumoveaudio.play();
+        }
+      } else if (event.key === 'ArrowDown') {
+        if (selectedChapter === null) {
+          selectedChapter = 0;
+          document.querySelectorAll('.row')[0].classList.add("selected");
+          menumoveaudio.play();
+        } else {
+          if (selectedChapter+1 >= document.querySelectorAll('.row').length) {
+            document.querySelectorAll('.row')[selectedChapter].classList.remove("selected");
+            selectedChapter = 0;
+            document.querySelectorAll('.row')[0].classList.add("selected");
+            menumoveaudio.play();
+          } else {
+            document.querySelectorAll('.row')[selectedChapter].classList.remove("selected");
+            selectedChapter++;
+            document.querySelectorAll('.row')[selectedChapter].classList.add("selected");
+            menumoveaudio.play();
+          }
+        }
+      } else if (event.key === 'Enter') {
+        if (selectedChapter !== null) {
+          window.location.href = document.querySelectorAll('.row')[selectedChapter].href;
+          menuselectaudio.play();
+        } 
+      }
+      }
+    });
+
+    // Emulator control functions
+    function emuSaveState() {
+      console.log('Save State');
+      alert('Save State feature coming soon!');
+    }
+
+    function emuLoadState() {
+      console.log('Load State');
+      alert('Load State feature coming soon!');
+    }
+
+    function emuFastForward() {
+      console.log('Fast Forward');
+      alert('Fast Forward feature coming soon!');
+    }
+
+    function emuSlowMotion() {
+      console.log('Slow Motion');
+      alert('Slow Motion feature coming soon!');
+    }
+
+    function emuRewind() {
+      console.log('Rewind');
+      alert('Rewind feature coming soon!');
+    }
+
+    function emuFrameAdv() {
+      console.log('Frame Advance');
+      alert('Frame Advance feature coming soon!');
+    }
+
+    function emuFullscreen() {
+      console.log('Fullscreen');
+      const canvas = document.querySelector('canvas');
+      if (canvas && canvas.requestFullscreen) {
+        canvas.requestFullscreen();
+      }
+    }
+
+    function emuScreenshot() {
+      console.log('Screenshot');
+      alert('Screenshot feature coming soon!');
+    }
+
+    function emuRestart() {
+      console.log('Restart');
+      if (confirm('Restart chapter?')) {
+        location.reload();
+      }
+    }
+
+    function emuMenu() {
+      console.log('Back to Menu');
+      if (confirm('Return to menu?')) {
+        location.href = 'emulator.html';
+      }
+    }
+  </script>
 </body>
 </html>
