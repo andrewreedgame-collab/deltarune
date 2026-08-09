@@ -31,6 +31,9 @@
       cursor: pointer;
       user-select: none;
       transition: background 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .emu-control:hover {
@@ -41,19 +44,80 @@
       background: rgba(255, 255, 255, 0.3);
     }
 
+    .emu-control img {
+      width: 16px;
+      height: 16px;
+      filter: brightness(1.15);
+    }
+
     .emu-separator {
       width: 1px;
       height: 24px;
       background: rgba(255, 255, 255, 0.3);
     }
 
-    body.gameplaying #emulatorOverlay {
-      display: none;
+    #emuStatus {
+      color: #fefe00;
+      font-size: 13px;
+      margin-right: 6px;
+      min-width: 140px;
+      text-align: center;
     }
 
-    body.gameplaying .menu {
+    .emu-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.72);
       display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
     }
+
+    .emu-modal.open { display: flex; }
+
+    .emu-modal-card {
+      background: #111;
+      color: #fff;
+      border: 1px solid #fefe00;
+      border-radius: 10px;
+      padding: 18px;
+      width: min(520px, 100%);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+    }
+
+    .emu-modal-card h3 {
+      margin: 0 0 10px;
+      color: #fefe00;
+    }
+
+    .emu-bind-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.14);
+    }
+
+    .emu-bind-row:last-child { border-bottom: none; }
+
+    .emu-bind-row button {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      border: 1px solid #fefe00;
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+
+    .emu-modal-actions { margin-top: 12px; display: flex; justify-content: flex-end; gap: 10px; }
+    .emu-modal-actions button { border-radius: 6px; padding: 8px 12px; border: 1px solid #fefe00; cursor: pointer; }
+    .emu-modal-actions .primary { background: #fefe00; color: #000; }
+
+    body.gameplaying #emulatorOverlay { display: none; }
+    body.gameplaying .menu { display: none; }
   </style>
 </head>
 <body>
@@ -95,20 +159,41 @@
   </div>
 
   <div id="emulatorOverlay" style="display: none;">
-    <div class="emu-control" onclick="emuSaveState()">💾 Save State</div>
-    <div class="emu-control" onclick="emuLoadState()">📂 Load State</div>
+    <div id="emuStatus">Ready</div>
+    <div class="emu-control" onclick="emuSaveState()"><img src="https://cdn.jsdelivr.net/gh/twitter/twirpz/files/emoji/svg/1f4be.svg" alt="save"> Save State</div>
+    <div class="emu-control" onclick="emuLoadState()"><img src="https://cdn.jsdelivr.net/gh/twitter/twirpz/files/emoji/svg/1f4c2.svg" alt="load"> Load State</div>
     <div class="emu-separator"></div>
-    <div class="emu-control" onclick="emuFastForward()">⏩ Fast Forward</div>
-    <div class="emu-control" onclick="emuSlowMotion()">🐢 Slow Motion</div>
+    <div class="emu-control" onclick="emuFastForward()"><img src="https://cdn.jsdelivr.net/gh/twitter/twirpz/files/emoji/svg/23e9.svg" alt="fast"> Fast Forward</div>
+    <div class="emu-control" onclick="emuSlowMotion()"><img src="https://cdn.jsdelivr.net/gh/twitter/twirpz/files/emoji/svg/1f422.svg" alt="slow"> Slow Motion</div>
     <div class="emu-separator"></div>
-    <div class="emu-control" onclick="emuRewind()">⏮️ Rewind</div>
-    <div class="emu-control" onclick="emuFrameAdv()">⏸️ Frame +1</div>
+    <div class="emu-control" onclick="emuRewind()"><img src="https://cdn.jsdelivr.net/gh/twitter/twirpz/files/emoji/svg/23ea.svg" alt="rewind"> Rewind</div>
+    <div class="emu-control" onclick="emuFrameAdv()"><img src="https://cdn.jsdelivr.net/gh/twitter/twirpz/files/emoji/svg/23f8.svg" alt="frame"> Frame +1</div>
     <div class="emu-separator"></div>
-    <div class="emu-control" onclick="emuFullscreen()">⛶ Fullscreen</div>
-    <div class="emu-control" onclick="emuScreenshot()">📸 Screenshot</div>
+    <div class="emu-control" onclick="emuFullscreen()"><img src="https://cdn.jsdelivr.net/gh/twitter/twirpz/files/emoji/svg/26f2.svg" alt="fullscreen"> Fullscreen</div>
+    <div class="emu-control" onclick="emuScreenshot()"><img src="https://cdn.jsdelivr.net/gh/twitter/twirpz/files/emoji/svg/1f4f8.svg" alt="screenshot"> Screenshot</div>
     <div class="emu-separator"></div>
-    <div class="emu-control" onclick="emuRestart()">🔄 Restart</div>
-    <div class="emu-control" onclick="emuMenu()">≡ Menu</div>
+    <div class="emu-control" onclick="emuRestart()"><img src="https://cdn.jsdelivr.net/gh/twitter/twirpz/files/emoji/svg/1f504.svg" alt="restart"> Restart</div>
+    <div class="emu-control" onclick="emuMenu()"><img src="https://cdn.jsdelivr.net/gh/twitter/twirpz/files/emoji/svg/2261.svg" alt="menu"> Menu</div>
+    <div class="emu-separator"></div>
+    <div class="emu-control" onclick="openBindingsModal()"><img src="https://cdn.jsdelivr.net/gh/twitter/twirpz/files/emoji/svg/2328.svg" alt="keys"> Keys</div>
+  </div>
+
+  <div id="bindingsModal" class="emu-modal">
+    <div class="emu-modal-card">
+      <h3>Emulator Keybindings</h3>
+      <div class="emu-bind-row"><span>Save State</span><button data-action="save" onclick="bindKey('save')">F5</button></div>
+      <div class="emu-bind-row"><span>Load State</span><button data-action="load" onclick="bindKey('load')">F6</button></div>
+      <div class="emu-bind-row"><span>Fast Forward</span><button data-action="fast" onclick="bindKey('fast')">F7</button></div>
+      <div class="emu-bind-row"><span>Slow Motion</span><button data-action="slow" onclick="bindKey('slow')">F8</button></div>
+      <div class="emu-bind-row"><span>Rewind</span><button data-action="rewind" onclick="bindKey('rewind')">F9</button></div>
+      <div class="emu-bind-row"><span>Frame +1</span><button data-action="frame" onclick="bindKey('frame')">F10</button></div>
+      <div class="emu-bind-row"><span>Fullscreen</span><button data-action="fullscreen" onclick="bindKey('fullscreen')">F11</button></div>
+      <div class="emu-bind-row"><span>Screenshot</span><button data-action="screenshot" onclick="bindKey('screenshot')">F12</button></div>
+      <div class="emu-modal-actions">
+        <button onclick="closeBindingsModal()">Close</button>
+        <button class="primary" onclick="resetBindings()">Reset</button>
+      </div>
+    </div>
   </div>
 
   <audio id="drone" controls loop autoplay hidden>
@@ -121,6 +206,8 @@
     const audio = document.getElementById('drone');
     const mute = document.getElementById('mute');
     const overlay = document.getElementById('emulatorOverlay');
+    const statusEl = document.getElementById('emuStatus');
+    const modalEl = document.getElementById('bindingsModal');
     let gamestarted = false;
     
     // Game context storage for emulator features
@@ -130,7 +217,17 @@
       currentChapter: null,
       gameSpeed: 1.0,
       frameBuffer: [],
-      isPaused: false
+      isPaused: false,
+      keybindings: {
+        save: 'F5',
+        load: 'F6',
+        fast: 'F7',
+        slow: 'F8',
+        rewind: 'F9',
+        frame: 'F10',
+        fullscreen: 'F11',
+        screenshot: 'F12'
+      }
     };
   
     mute.addEventListener('click', () => {
@@ -196,6 +293,76 @@
       overlayClone.style.cssText = 'position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0, 0, 0, 0.9); border-top: 2px solid #fefe00; padding: 12px 16px; display: flex; gap: 12px; align-items: center; font-size: 14px; z-index: 9998; flex-wrap: wrap; justify-content: center;';
       overlayClone.innerHTML = overlay.innerHTML;
       document.body.appendChild(overlayClone);
+      syncStatus('Ready');
+    }
+
+    function syncStatus(message) {
+      if (statusEl) {
+        statusEl.textContent = message;
+      }
+    }
+
+    function openBindingsModal() {
+      modalEl.classList.add('open');
+    }
+
+    function closeBindingsModal() {
+      modalEl.classList.remove('open');
+    }
+
+    function resetBindings() {
+      window.gameContext.keybindings = {
+        save: 'F5',
+        load: 'F6',
+        fast: 'F7',
+        slow: 'F8',
+        rewind: 'F9',
+        frame: 'F10',
+        fullscreen: 'F11',
+        screenshot: 'F12'
+      };
+      updateBindingButtons();
+      syncStatus('Bindings reset');
+    }
+
+    function updateBindingButtons() {
+      document.querySelectorAll('[data-action]').forEach(btn => {
+        const action = btn.getAttribute('data-action');
+        const key = window.gameContext.keybindings[action];
+        btn.textContent = key || 'Unbound';
+      });
+    }
+
+    function bindKey(action) {
+      const btn = document.querySelector(`[data-action="${action}"]`);
+      if (!btn) return;
+      btn.textContent = 'Press key...';
+      const capture = (event) => {
+        event.preventDefault();
+        const keyName = event.key.length === 1 ? event.key.toUpperCase() : event.key;
+        window.gameContext.keybindings[action] = keyName;
+        btn.textContent = keyName;
+        document.removeEventListener('keydown', capture);
+        syncStatus(`${action} bound to ${keyName}`);
+      };
+      document.addEventListener('keydown', capture);
+    }
+
+    function applyKeybinding(event) {
+      if (!gamestarted) return;
+      const key = event.key.length === 1 ? event.key.toUpperCase() : event.key;
+      const action = Object.entries(window.gameContext.keybindings).find(([, bound]) => bound === key);
+      if (!action) return;
+      switch (action[0]) {
+        case 'save': emuSaveState(); break;
+        case 'load': emuLoadState(); break;
+        case 'fast': emuFastForward(); break;
+        case 'slow': emuSlowMotion(); break;
+        case 'rewind': emuRewind(); break;
+        case 'frame': emuFrameAdv(); break;
+        case 'fullscreen': emuFullscreen(); break;
+        case 'screenshot': emuScreenshot(); break;
+      }
     }
 
     const menumoveaudio = new Audio('audios/snd_menumove.mp3');
@@ -218,7 +385,10 @@
 
     let selectedChapter = null;
     document.addEventListener('keydown', function(event) {
-      if (!gamestarted) {
+      if (gamestarted) {
+        applyKeybinding(event);
+        return;
+      }
       if (event.key === 'ArrowUp') {
         if (selectedChapter === null) {
           selectedChapter = 0;
@@ -262,35 +432,39 @@
 
     // Emulator control functions
     function emuSaveState() {
+      syncStatus('Saving state…');
       if (typeof window.saveGame === 'function') {
         window.saveGame();
+        syncStatus('State saved');
+      } else if (window.gameContext.module && typeof window.gameContext.module.FS?.syncfs === 'function') {
+        window.gameContext.module.FS.syncfs(true, () => syncStatus('State saved'));
       } else {
-        alert('Save function not available');
+        syncStatus('Save unavailable');
       }
     }
 
     function emuLoadState() {
+      syncStatus('Loading state…');
       if (typeof window.loadGame === 'function') {
         window.loadGame();
+        syncStatus('State loaded');
+      } else if (window.gameContext.module && typeof window.gameContext.module.FS?.syncfs === 'function') {
+        window.gameContext.module.FS.syncfs(false, () => syncStatus('State loaded'));
       } else {
-        alert('Load function not available');
+        syncStatus('Load unavailable');
       }
     }
 
     function emuFastForward() {
       window.gameContext.gameSpeed = Math.min(2.0, window.gameContext.gameSpeed + 0.5);
-      if (window.gameContext.module && window.gameContext.module.setStatus) {
-        window.gameContext.module.setStatus(`Game speed: ${window.gameContext.gameSpeed}x`);
-      }
       applyGameSpeed();
+      syncStatus(`Speed ${window.gameContext.gameSpeed.toFixed(2)}x`);
     }
 
     function emuSlowMotion() {
       window.gameContext.gameSpeed = Math.max(0.25, window.gameContext.gameSpeed - 0.25);
-      if (window.gameContext.module && window.gameContext.module.setStatus) {
-        window.gameContext.module.setStatus(`Game speed: ${window.gameContext.gameSpeed}x`);
-      }
       applyGameSpeed();
+      syncStatus(`Speed ${window.gameContext.gameSpeed.toFixed(2)}x`);
     }
 
     function applyGameSpeed() {
@@ -306,22 +480,19 @@
     function emuRewind() {
       if (typeof window.loadGame === 'function') {
         window.loadGame();
+        syncStatus('Rewound to last save');
       } else {
-        alert('Rewind requires save state - use Load State instead');
+        syncStatus('Rewind unavailable');
       }
     }
 
     function emuFrameAdv() {
       if (window.gameContext.isPaused) {
         window.gameContext.isPaused = false;
-        if (window.gameContext.module && window.gameContext.module.setStatus) {
-          window.gameContext.module.setStatus('Resumed');
-        }
+        syncStatus('Resumed');
       } else {
         window.gameContext.isPaused = true;
-        if (window.gameContext.module && window.gameContext.module.setStatus) {
-          window.gameContext.module.setStatus('Frame paused - advance one frame');
-        }
+        syncStatus('Frame paused');
       }
     }
 
@@ -330,7 +501,11 @@
       if (canvas && canvas.requestFullscreen) {
         canvas.requestFullscreen().catch(err => {
           console.warn('Fullscreen error:', err);
+          syncStatus('Fullscreen unavailable');
         });
+        syncStatus('Fullscreen');
+      } else {
+        syncStatus('No canvas');
       }
     }
 
@@ -338,6 +513,10 @@
       const canvas = window.gameContext.canvas || document.querySelector('canvas');
       if (canvas) {
         canvas.toBlob(function(blob) {
+          if (!blob) {
+            syncStatus('Screenshot failed');
+            return;
+          }
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
@@ -346,9 +525,10 @@
           link.click();
           document.body.removeChild(link);
           URL.revokeObjectURL(url);
+          syncStatus('Screenshot saved');
         }, 'image/png');
       } else {
-        alert('Canvas not found');
+        syncStatus('Canvas not found');
       }
     }
 
@@ -363,6 +543,13 @@
         location.href = 'emulator.html';
       }
     }
+
+    updateBindingButtons();
+    document.addEventListener('click', function(event) {
+      if (event.target && event.target.classList.contains('emu-modal')) {
+        closeBindingsModal();
+      }
+    });
   </script>
 </body>
 </html>
