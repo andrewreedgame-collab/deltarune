@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <base href="https://cdn.jsdelivr.net/gh/technonyte00/deltarune@main/">
+  <base href="./">
   <meta charset="UTF-8">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -157,8 +157,17 @@
         }
       } else if (event.key === 'Enter') {
         if (selectedChapter !== null) {
-          window.location.href = document.querySelectorAll('.row')[selectedChapter].href;
+          const row = document.querySelectorAll('.row')[selectedChapter];
           menuselectaudio.play();
+          if (row && row.href) {
+            const href = row.getAttribute('href') || '';
+            if (href.startsWith('javascript:')) {
+              const script = href.replace(/^javascript:/, '');
+              Function(script)();
+            } else {
+              window.location.href = href;
+            }
+          }
         } 
       }
       }

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <base href="https://cdn.jsdelivr.net/gh/technonyte00/deltarune@main/">
+  <base href="./">
   <meta charset="UTF-8">
   <link rel="stylesheet" href="style.css">
   <style>
@@ -154,7 +154,19 @@
         document.body.classList.add('gameplaying');
         overlay.style.display = 'flex';
         window.gameContext.currentChapter = chapter;
-        document.documentElement.innerHTML = html;
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const base = doc.querySelector('base');
+        if (base) {
+          base.setAttribute('href', `chapter${chapter}/`);
+        } else {
+          const localBase = doc.createElement('base');
+          localBase.setAttribute('href', `chapter${chapter}/`);
+          doc.head.prepend(localBase);
+        }
+
+        document.documentElement.innerHTML = doc.documentElement.outerHTML;
         document.documentElement.querySelectorAll('script').forEach(oldScript => {
           const newScript = document.createElement('script');
           if (oldScript.src) {
@@ -172,6 +184,9 @@
         }, 500);
         
         appendEmulatorOverlay();
+      }).catch(err => {
+        console.error('Failed to load chapter', err);
+        alert('Could not load this chapter.');
       });
     }
 
